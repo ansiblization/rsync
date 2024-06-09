@@ -1,0 +1,7 @@
+{% include 'common/templates/header.j2' %}
+{% if rsync_vars.exclude %}
+
+{% for rsync_exclude in rsync_vars.exclude %}
+{{ rsync_exclude }}
+{% endfor %}
+{% endif %}

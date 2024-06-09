@@ -1,0 +1,5 @@
+---
+
+rsync_jobs: []
+rsync_options: -av --mkpath --one-file-system --progress
+rsync_conflicts_timeout: 600

@@ -1,0 +1,11 @@
+{% include 'common/templates/header.j2' %}
+
+[Unit]
+Description=Ansible rsync timer ({{ rsync_vars.name }})
+
+[Timer]
+OnCalendar={{ rsync_vars.schedule }}
+Unit=ansible-rsync@{{ rsync_vars.name }}.service
+
+[Install]
+WantedBy=timers.target

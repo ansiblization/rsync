@@ -1,0 +1,5 @@
+{% if rsync_vars.conflicts %}
+{% for rsync_conflict in rsync_vars.conflicts %}
+{{ rsync_conflict }}
+{% endfor %}
+{% endif %}

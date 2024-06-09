@@ -1,0 +1,18 @@
+{% include 'common/templates/header.j2' %}
+
+[Unit]
+Description=Ansible rsync job (%i)
+
+[Service]
+Type=exec
+User=root
+StandardError=syslog
+StandardOutput=syslog
+SyslogIdentifier=ansible-rsync-%i
+ExecStartPre=/usr/bin/xargs -r -a /etc/ansible-rsync/%i.conflicts /usr/bin/systemctl stop
+ExecStart=/usr/bin/xargs -r -a /etc/ansible-rsync/%i.args /usr/bin/rsync {{ rsync_options }} --include-from "/etc/ansible-rsync/%i.include" --exclude-from "/etc/ansible-rsync/%i.exclude"
+ExecStopPost=/usr/bin/xargs -r -a /etc/ansible-rsync/%i.conflicts /usr/bin/systemctl start
+TimeoutStopSec={{ rsync_conflicts_timeout }}
+
+[Install]
+WantedBy=multi-user.target

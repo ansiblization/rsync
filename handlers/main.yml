@@ -1,0 +1,11 @@
+---
+
+- name: Enable rsync timer
+  ansible.builtin.systemd:
+    name: "ansible-rsync-{{ rsync_vars.name }}.timer"
+    state: started
+    enabled: true
+
+- name: Daemon reload
+  ansible.builtin.systemd:
+    daemon_reload: true

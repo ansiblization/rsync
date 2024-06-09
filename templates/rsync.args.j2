@@ -1,0 +1,5 @@
+{% for rsync_option in rsync_vars.options %}
+{{ rsync_option }}
+{% endfor %}
+{% if rsync_vars.remote_source %}{{ rsync_vars.remote_source_user }}@{{ rsync_vars.remote_source }}:{% endif %}{{ rsync_vars.from }}
+{% if rsync_vars.remote_destination %}{{ rsync_vars.remote_destination_user }}@{{ rsync_vars.remote_destination }}:{% endif %}{{ rsync_vars.to }}

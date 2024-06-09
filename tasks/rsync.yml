@@ -1,0 +1,69 @@
+---
+
+- name: Assert valid rsync configuration
+  ansible.builtin.assert:
+    that:
+      - rsync_job.name is defined
+      - rsync_job.to is defined or rsync_job.path is defined
+      - rsync_job.from is defined or rsync_job.path is defined
+
+- name: Resolve rsync job variables
+  ansible.builtin.set_fact:
+    rsync_vars:
+      name: "{{ rsync_job.name }}"
+      from: "{{ rsync_job.from | default(rsync_job.path) }}"
+      to: "{{ rsync_job.to | default(rsync_job.path) }}"
+      include: "{{ rsync_job.include | default([]) }}"
+      exclude: "{{ rsync_job.exclude | default([]) }}"
+      options: "{{ rsync_job.options | default([]) }}"
+      schedule: "{{ rsync_job.schedule | default(None) }}"
+      conflicts: "{{ rsync_job.conflicts | default([]) }}"
+      remote_source: "{{ rsync_job.remote_source | default(None) }}"
+      remote_destination: "{{ rsync_job.remote_destination | default(None) }}"
+      remote_source_user: "{{ rsync_job.remote_source_user | default('root') }}"
+      remote_destination_user: "{{ rsync_job.remote_destination_user | default('root') }}"
+      state: "{{ rsync_job.state | default('present') }}"
+
+- name: Ensure rsync job configuration files
+  ansible.builtin.template:
+    src: "rsync.{{ rsync_configuration_type }}.j2"
+    dest: "/etc/ansible-rsync/{{ rsync_vars.name
+      }}.{{ rsync_configuration_type }}"
+    mode: "0o644"
+  loop_control:
+    loop_var: rsync_configuration_type
+  loop: ["args", "include", "exclude", "conflicts"]
+  when: rsync_vars.state == "present"
+
+- name: Prune absent job configuration files
+  ansible.builtin.file:
+    dest: "/etc/ansible-rsync/{{ rsync_vars.name
+      }}.{{ rsync_configuration_type }}"
+    state: absent
+  loop_control:
+    loop_var: rsync_configuration_type
+  loop: ["args", "include", "exclude", "conflicts"]
+  when: rsync_vars.state == 'absent'
+
+- name: Ensure schedule state
+  ansible.builtin.set_fact:
+    rsync_job_scheduled: "{{ rsync_vars.schedule and
+      rsync_vars.state == 'present' }}"
+
+- name: Ensure rsync timer unit
+  ansible.builtin.template:
+    src: "rsync.timer.j2"
+    dest: "/etc/systemd/system/ansible-rsync-{{ rsync_vars.name }}.timer"
+    mode: "0o644"
+  when: rsync_job_scheduled
+  notify: Enable rsync timer
+
+- name: Ensure absent rsync timer unit
+  ansible.builtin.file:
+    path: "/etc/systemd/system/ansible-rsync-{{ rsync_vars.name }}.timer"
+    state: absent
+  when: not rsync_job_scheduled
+  notify: Daemon reload
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,32 @@
+---
+
+- name: Ensure rsync
+  ansible.builtin.package:
+    name: rsync
+    state: present
+
+- name: Ensure rsync configuration directory
+  ansible.builtin.file:
+    path: /etc/ansible-rsync
+    state: directory
+    mode: "0o755"
+
+- name: Ensure rsync service unit
+  ansible.builtin.template:
+    src: "rsync@.service.j2"
+    dest: "/etc/systemd/system/ansible-rsync@.service"
+    mode: "0o644"
+  notify: Daemon reload
+
+- name: Ensure syslog configuration
+  ansible.builtin.template:
+    src: rsync-syslog.conf.j2
+    dest: /etc/syslog-ng/conf.d/ansible-rsync.conf
+    mode: "0o644"
+  notify: Restart syslog
+
+- name: "Include rsync tasks"
+  ansible.builtin.include_tasks: "rsync.yml"
+  loop_control:
+    loop_var: rsync_job
+  loop: "{{ rsync_jobs }}"
