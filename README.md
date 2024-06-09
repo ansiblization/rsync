@@ -1,5 +1,7 @@
 # Ansible role for installing scheduled rsync jobs
 
+This role depends on the [ansiblization/syslog](https://github.com/ansiblization/syslog) role for logging capabilities.
+
 The rsync jobs to be scheduled have to be defined as a list named `rsync_jobs`:
 
 ```yml
